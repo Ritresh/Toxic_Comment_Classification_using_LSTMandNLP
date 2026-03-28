@@ -1,162 +1,208 @@
+# Toxic Comment Classification using Deep Learning (LSTM)
 
-# 🧾 Vendor Performance Analysis – Retail Inventory & Sales
+## Project Overview
+This project builds a **multi-label toxic comment classification model** using **Natural Language Processing (NLP)** and **Deep Learning**.
 
-_Analyzing vendor efficiency and profitability to support strategic purchasing and inventory decisions using SQL, Python, and Power BI._
+The model predicts whether a comment belongs to one or more toxic categories.
 
----
+### Toxicity Labels
+- Toxic
+- Severe Toxic
+- Obscene
+- Threat
+- Insult
+- Identity Hate
 
-## 📌 Table of Contents
-- <a href="#overview">Overview</a>
-- <a href="#business-problem">Business Problem</a>
-- <a href="#dataset">Dataset</a>
-- <a href="#tools--technologies">Tools & Technologies</a>
-- <a href="#project-structure">Project Structure</a>
-- <a href="#data-cleaning--preparation">Data Cleaning & Preparation</a>
-- <a href="#exploratory-data-analysis-eda">Exploratory Data Analysis (EDA)</a>
-- <a href="#research-questions--key-findings">Research Questions & Key Findings</a>
-- <a href="#dashboard">Dashboard</a>
-- <a href="#how-to-run-this-project">How to Run This Project</a>
-- <a href="#final-recommendations">Final Recommendations</a>
-- <a href="#author--contact">Author & Contact</a>
-
----
-<h2><a class="anchor" id="overview"></a>Overview</h2>
-
-This project evaluates vendor performance and retail inventory dynamics to drive strategic insights for purchasing, pricing, and inventory optimization. A complete data pipeline was built using SQL for ETL, Python for analysis and hypothesis testing, and Power BI for visualization.
-
----
-<h2><a class="anchor" id="business-problem"></a>Business Problem</h2>
-
-Effective inventory and sales management are critical in the retail sector. This project aims to:
-- Identify underperforming brands needing pricing or promotional adjustments
-- Determine vendor contributions to sales and profits
-- Analyze the cost-benefit of bulk purchasing
-- Investigate inventory turnover inefficiencies
-- Statistically validate differences in vendor profitability
-
----
-<h2><a class="anchor" id="dataset"></a>Dataset</h2>
-
-- Multiple CSV files located in `/data/` folder (sales, vendors, inventory)
-- Summary table created from ingested data and used for analysis
+The goal of this project is to help automatically detect harmful or abusive comments on online platforms.
 
 ---
 
-<h2><a class="anchor" id="tools--technologies"></a>Tools & Technologies</h2>
+# Dataset
 
-- SQL (Common Table Expressions, Joins, Filtering)
-- Python (Pandas, Matplotlib, Seaborn, SciPy)
-- Power BI (Interactive Visualizations)
-- GitHub
+The dataset contains Wikipedia comments labeled for toxicity.
+
+### Files Used
+- `train.csv` – Training dataset
+- `test.csv` – Test dataset
+- `test_labels.csv` – Test labels
+- `sample_submission.csv` – Submission format
+
+### Dataset Size
+- **159,571 comments**
+- **Multi-label classification problem**
+
+Each comment may contain **multiple toxicity labels**.
 
 ---
-<h2><a class="anchor" id="project-structure"></a>Project Structure</h2>
+
+# Exploratory Data Analysis (EDA)
+
+Several analyses were performed to understand the dataset.
+
+### Label Distribution
+Visualized how many comments belong to each toxicity class.
+
+### Clean vs Toxic Comments
+Identified comments that have **no toxicity labels**.
+
+### Comment Length Analysis
+Studied distribution of comment lengths.
+
+### Toxic vs Clean Length Comparison
+Compared length of toxic and non-toxic comments.
+
+### Label Correlation
+Created a **correlation heatmap** to see relationships between toxicity labels.
+
+### Most Frequent Words
+Extracted the **top words appearing in toxic comments and clean comments**.
+
+---
+
+# Feature Engineering
+
+### Text Vectorization
+
+Text comments were converted into numerical form using **TensorFlow TextVectorization**.
+
+Settings used:
+
+- Maximum vocabulary size: `200000`
+- Maximum sequence length: `1800`
+
+This process:
+- Removes punctuation
+- Converts words to tokens
+- Maps tokens to integer indices
+- Pads sequences to fixed length
+
+---
+
+# Dataset Pipeline
+
+The dataset was converted into a **TensorFlow dataset pipeline**.
+
+Steps used:
+
+- Cache dataset
+- Shuffle dataset
+- Batch dataset
+- Prefetch dataset
+
+### Dataset Split
+
+- **70% Training**
+- **10% Validation**
+- **20% Testing**
+
+---
+
+# Deep Learning Model
+
+A **Bidirectional LSTM model** was built to classify toxic comments.
+
+### Model Architecture
 
 ```
-vendor-performance-analysis/
-│
-├── README.md
-├── .gitignore
-├── requirements.txt
-├── Vendor Performance Report.pdf
-│
-├── notebooks/                  # Jupyter notebooks
-│   ├── exploratory_data_analysis.ipynb
-│   ├── vendor_performance_analysis.ipynb
-│
-├── scripts/                    # Python scripts for ingestion and processing
-│   ├── ingestion_db.py
-│   └── get_vendor_summary.py
-│
-├── dashboard/                  # Power BI dashboard file
-│   └── vendor_performance_dashboard.pbix
+Embedding Layer
+↓
+Bidirectional LSTM
+↓
+Dense Layer (ReLU)
+↓
+Dense Layer (ReLU)
+↓
+Dense Layer (ReLU)
+↓
+Output Layer (Sigmoid)
 ```
 
----
-<h2><a class="anchor" id="data-cleaning--preparation"></a>Data Cleaning & Preparation</h2>
+### Output
 
-- Removed transactions with:
-  - Gross Profit ≤ 0
-  - Profit Margin ≤ 0
-  - Sales Quantity = 0
-- Created summary tables with vendor-level metrics
-- Converted data types, handled outliers, merged lookup tables
+The model predicts **6 probabilities** corresponding to each toxicity label.
 
----
-<h2><a class="anchor" id="exploratory-data-analysis-eda"></a>Exploratory Data Analysis (EDA)</h2>
+### Activation
+Sigmoid (for multi-label classification)
 
-**Negative or Zero Values Detected:**
-- Gross Profit: Min -52,002.78 (loss-making sales)
-- Profit Margin: Min -∞ (sales at zero or below cost)
-- Unsold Inventory: Indicating slow-moving stock
+### Loss Function
+Binary Crossentropy
 
-**Outliers Identified:**
-- High Freight Costs (up to 257K)
-- Large Purchase/Actual Prices
-
-**Correlation Analysis:**
-- Weak between Purchase Price & Profit
-- Strong between Purchase Qty & Sales Qty (0.999)
-- Negative between Profit Margin & Sales Price (-0.179)
+### Optimizer
+Adam
 
 ---
-<h2><a class="anchor" id="research-questions--key-findings"></a>Research Questions & Key Findings</h2>
 
-1. **Brands for Promotions**: 198 brands with low sales but high profit margins
-2. **Top Vendors**: Top 10 vendors = 65.69% of purchases → risk of over-reliance
-3. **Bulk Purchasing Impact**: 72% cost savings per unit in large orders
-4. **Inventory Turnover**: $2.71M worth of unsold inventory
-5. **Vendor Profitability**:
-   - High Vendors: Mean Margin = 31.17%
-   - Low Vendors: Mean Margin = 41.55%
-6. **Hypothesis Testing**: Statistically significant difference in profit margins → distinct vendor strategies
+# Prediction Example
 
----
-<h2><a class="anchor" id="dashboard"></a>Dashboard</h2>
+A function was created to predict toxicity for any input comment.
 
-- Power BI Dashboard shows:
-  - Vendor-wise Sales and Margins
-  - Inventory Turnover
-  - Bulk Purchase Savings
-  - Performance Heatmaps
+Example:
 
-![Vendor Performance Dashboard](images/dashboard.png)
-
----
-<h2><a class="anchor" id="how-to-run-this-project"></a>How to Run This Project</h2>
-
-1. Clone the repository:
-```bash
-git clone https://github.com/yourusername/vendor-performance-analysis.git
+```python
+predict_comment("You freaking suck! I am going to hit you.")
 ```
-3. Load the CSVs and ingest into database:
-```bash
-python scripts/ingestion_db.py
-```
-4. Create vendor summary table:
-```bash
-python scripts/get_vendor_summary.py
-```
-5. Open and run notebooks:
-   - `notebooks/exploratory_data_analysis.ipynb`
-   - `notebooks/vendor_performance_analysis.ipynb`
-6. Open Power BI Dashboard:
-   - `dashboard/vendor_performance_dashboard.pbix`
+
+Output:
+
+| Label | Probability | Prediction |
+|------|------|------|
+| toxic | value | 0/1 |
+| severe_toxic | value | 0/1 |
+| obscene | value | 0/1 |
+| threat | value | 0/1 |
+| insult | value | 0/1 |
+| identity_hate | value | 0/1 |
 
 ---
-<h2><a class="anchor" id="final-recommendations"></a>Final Recommendations</h2>
 
-- Diversify vendor base to reduce risk
-- Optimize bulk order strategies
-- Reprice slow-moving, high-margin brands
-- Clear unsold inventory strategically
-- Improve marketing for underperforming vendors
+# Technologies Used
+
+- Python
+- Pandas
+- NumPy
+- TensorFlow / Keras
+- Matplotlib
+- Seaborn
+- Natural Language Processing (NLP)
+
+Development Environment:
+
+- Google Colab
 
 ---
-<h2><a class="anchor" id="author--contact"></a>Author & Contact</h2>
 
-**Ayushi Mishra**  
-Data Analyst  
-📧 Email: techclasses0810@gmail.com  
-🔗 [LinkedIn](https://www.linkedin.com/in/ayushi-mishra-30813b174/)  
-🔗 [Portfolio](https://www.youtube.com/@techclasses0810/)
+# Project Workflow
+
+1. Load dataset
+2. Perform Exploratory Data Analysis
+3. Prepare text data
+4. Vectorize comments
+5. Build TensorFlow dataset pipeline
+6. Train Bidirectional LSTM model
+7. Evaluate predictions
+
+---
+
+# Future Improvements
+
+- Train model for more epochs
+- Try advanced architectures like **GRU or Transformers**
+- Deploy the model as a **web application**
+
+---
+
+# Author
+
+**Ritresh Kumar**  
+BCA Student | Aspiring Data Scientist
+
+Skills:
+- Python
+- Machine Learning
+- Data Analysis
+- Customer Analytics
+- Deep Learning
+
+📧 Email: ritresh273@gmail.com  
+🔗 [LinkedIn](https://www.linkedin.com/feed/)  
+🔗 [GitHub](https://github.com/Ritresh/Ritresh)
